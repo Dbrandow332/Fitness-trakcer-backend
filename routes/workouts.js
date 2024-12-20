@@ -1,18 +1,29 @@
 const express = require("express");
 const Workout = require("../models/Workout");
-
 const router = express.Router();
 
 // Add a workout
-router.post("/", async (req, res) => {
-    const { userId, exercise, calories, duration } = req.body;
+router.post("/:firebaseUid", async (req, res) => {
+    const { firebaseUid } = req.params;
+    const { exercise, calories, duration } = req.body;
 
     try {
-        const newWorkout = new Workout({ userId, exercise, calories, duration });
-        await newWorkout.save();
-        res.status(201).json(newWorkout);
+        if (!exercise || !calories || !duration) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const newWorkout = new Workout({
+            userId: firebaseUid, // Use Firebase UID
+            exercise,
+            calories,
+            duration,
+        });
+
+        const savedWorkout = await newWorkout.save();
+        res.status(201).json(savedWorkout);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("Error adding workout:", error);
+        res.status(500).json({ message: "Server error" });
     }
 });
 
