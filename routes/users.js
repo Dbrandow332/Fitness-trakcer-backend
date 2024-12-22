@@ -8,11 +8,16 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
     const { firebaseUid, name, email } = req.body;
 
+    // Validate required fields
+    if (!firebaseUid || !name || !email) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
     try {
         // Check if user already exists using firebaseUid
         const existingUser = await User.findOne({ firebaseUid });
         if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
+            return res.status(400).json({ message: "A user with this Firebase UID already exists" });
         }
 
         // Create a new user
@@ -25,10 +30,11 @@ router.post("/register", async (req, res) => {
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
     } catch (error) {
-        console.error("Error registering user:", error.message);
+        console.error("Error registering user:", error); // Includes stack trace for debugging
         res.status(500).json({ message: "Server error" });
     }
 });
+
 
 
 router.get("/:firebaseUid", async (req, res) => {
